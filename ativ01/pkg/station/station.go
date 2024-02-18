@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/henriquemarlon/ENG-COMP-M9/ativ01/internal/gas"
+	"github.com/henriquemarlon/ENG-COMP-M9/ativ01/internal/rad_lum"
 	"math"
 	"math/rand"
 	"time"
-	"github.com/henriquemarlon/ENG-COMP-M9/ativ01"
 )
 
 type Location struct {
@@ -16,9 +17,10 @@ type Location struct {
 }
 
 type Station struct {
-	Location string `json:"sensor"`
-	Gas      string `json:"gas"`
-	Rad_Lum  string `json:"rad_lum"`
+	Location  string `json:"location"`
+	Gas       string `json:"gas"`
+	RadLum    string `json:"rad_lum"`
+	TimeStamp string `json:"timestamp"`
 }
 
 type Interval struct {
@@ -47,37 +49,37 @@ func GenerateLocation() Location {
 	return data
 }
 
-func main() {
-	opts := MQTT.NewClientOptions().AddBroker("tcp://localhost:1891")
-	opts.SetClientID(fmt.Sprintf("station-%d", rand.Intn(1000)))
+func ConnectMQTT(seed rand.Source, url string) MQTT.Client {
+	opts := MQTT.NewClientOptions().AddBroker(url)
+	opts.SetClientID(fmt.Sprintf("station-%d", seed.Int63()))
 	client := MQTT.NewClient(opts)
 	if session := client.Connect(); session.Wait() && session.Error() != nil {
 		panic(session.Error())
 	}
+	return client
+}
 
+func Start(url string) {
+	client := ConnectMQTT(rand.NewSource(time.Now().UnixNano()), url)
+	location := GenerateLocation()
+	gasData := gas.Generate()
+	radLumData := rad_lum.Generate()
+
+	data := Station{
+		Location: fmt.Sprintf(`{"latitude":%f,"longitude":%f}`, location.Latitude, location.Longitude),
+		Gas: fmt.Sprintf(`{"CO2":%f,"CO":%f,"NO2":%f,"MP10":%f,"MP25":%f}`, gasData.CO2, gasData.CO, gasData.NO2, gasData.MP10, gasData.MP25),
+		RadLum: fmt.Sprintf(`{"ET":%f,"LI":%f,"SR":%f}`, radLumData.ET, radLumData.LI, radLumData.SR),
+		TimeStamp: time.Now().String(),
+	}
 
 	for {
-		// Cria a estrutura de dados para enviar ao broker MQTT
-		senddata := SendData{
-			Sensor:           config.Sensor,
-			Latitude:         config.Latitude,
-			Longitude:        config.Longitude,
-			QoS:              config.QoS,
-			Unit:             config.Unit,
-			TransmissionRate: config.TransmissionRate,
-			CurrentTime:      time.Now(),
-			Values:           createGasesValues(),
-		}
-
-		jsonData, err := json.MarshalIndent(senddata, "", "    ")
+		payload, err := json.Marshal(data)
 		if err != nil {
-			fmt.Println("Erro ao converter para JSON:", err)
+			fmt.Println("Error converting to JSON:", err)
 			return
 		}
-
-		token := client.Publish(config.Sensor, config.QoS, false, string(jsonData))
+		token := client.Publish("/stations", 0, false, string(payload))
 		token.Wait()
-		fmt.Println("Publicado:", string(jsonData))
-		time.Sleep(time.Duration(config.TransmissionRate) * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }

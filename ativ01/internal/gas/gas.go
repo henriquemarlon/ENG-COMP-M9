@@ -28,7 +28,7 @@ var Data = map[string] Interval {
 }
 
 func DataEntropy(key string) float64 {
-	rand.NewSource(time.Now().UnixNano())
+	rand.NewSource(time.Now().UnixNano()).Int63()
 	max := Data[key].Maximum
 	min := Data[key].Minimum
 	value := rand.Float64()*(max-min) + min
