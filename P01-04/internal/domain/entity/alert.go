@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type AlertRepository interface {
 	CreateAlert(data *Alert) error
@@ -8,6 +11,7 @@ type AlertRepository interface {
 }
 
 type Alert struct {
+	ID        string    `json:"id"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	Option    string    `json:"option"`
@@ -15,5 +19,5 @@ type Alert struct {
 }
 
 func NewAlert(latitude float64, longitude float64, option string) *Alert {
-	return &Alert{Latitude: latitude, Longitude: longitude, Option: option, Timestamp: time.Now()}
+	return &Alert{ID: uuid.New().String(), Latitude: latitude, Longitude: longitude, Option: option, Timestamp: time.Now()}
 }

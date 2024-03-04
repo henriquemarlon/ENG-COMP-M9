@@ -2,18 +2,19 @@ package main
 
 import (
 	"database/sql"
-	"log"
-	"sync"
+	"fmt"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/domain/entity"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/mqtt"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/repository"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"log"
+	"os"
+	"sync"
 )
 
 func main() {
-
-	db, err := sql.Open("postgres", "postgresql://admin:password@postgres:5432/postgres?sslmode=disable")
+	db, err := sql.Open("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable", os.Getenv("DATABASE_USERNAME"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_NAME")))
 	if err != nil {
 		log.Fatalf("Failed to connect to Database: %v", err)
 	}
@@ -32,8 +33,7 @@ func main() {
 		wg.Add(1)
 		go func(sensor usecase.FindAllSensorsOutputDTO) {
 			defer wg.Done()
-			// opts := MQTT.NewClientOptions().AddBroker("rabbitmq:1883").SetUsername("simulation").SetPassword("admin123456").SetClientID(sensor.ID)
-			opts := MQTT.NewClientOptions().AddBroker("rabbitmq:1883").SetUsername("simulation").SetPassword("admin123456").SetClientID(sensor.ID)
+			opts := MQTT.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%s", os.Getenv("BROKER_TLS_URL"))).SetUsername(os.Getenv("BROKER_USERNAME")).SetPassword(os.Getenv("BROKER_PASSWORD")).SetClientID(sensor.ID)
 			client := MQTT.NewClient(opts)
 			if session := client.Connect(); session.Wait() && session.Error() != nil {
 				log.Fatalf("Failed to connect to MQTT broker: %v", session.Error())
@@ -41,7 +41,7 @@ func main() {
 			stationRepository := mqtt.NewPublisherMQTTRepository(client)
 			id, value := entity.NewSensorPayload(
 				sensor.ID,
-				map[string][]float64{"co2": {0, 100, 3}, "co": {0, 100, 3}, "no2": {0, 100, 3}, "mp10": {0, 100, 3}, "mp25": {0, 100, 3}, "rad": {0, 100, 3}},
+				map[string][]float64{"co2": {0, 1000, 1.96}, "co": {0, 15, 1.96}, "no2": {0, 1130, 1.96}, "mp10": {0, 250, 1.96}, "mp25": {0, 125, 1.96}, "rad": {1, 1280, 1.96}},
 			)
 			log := entity.NewLog(id, value)
 			stationRepository.Publish(log)

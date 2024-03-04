@@ -9,8 +9,10 @@
 # https://github.com/docker/awesome-compose
 services:
   postgres:
+    platform: linux/amd64
     image: postgres
     restart: always
+    hostname: postgres
     container_name: postgres
     environment:
       POSTGRES_USER: admin
@@ -24,55 +26,32 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ../migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
+      - ../utils/migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
       - postgres:/var/lib/postgresql/data
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    hostname: rabbitmq
-    container_name: rabbitmq
-    build:
-      context: .
-      dockerfile: Dockerfile.rabbitmq
-    ports:
-      - "1883:1883"
-      - "1891:1891"
-      - "5672:5672"
-      - "15672:15672"
-    healthcheck:
-      test: rabbitmq-diagnostics check_port_connectivity
-      interval: 2s
-      timeout: 2s
-      retries: 20
-    restart: always
-    environment:
-      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\""
-    command: ["rabbitmq-server"]
-    volumes:
-      - ../config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
-      - ../config/definitions.json:/etc/rabbitmq/definitions.json:ro
   simulation:
     container_name: simulation
+    hostname: simulation
+    restart: always
+    env_file:
+      - ../config/.env
     build:
       context: ..
-      dockerfile: build/Dockerfile.simulation
+      dockerfile: build/Dockerfile.simulation-hivemq
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-    volumes:
-      - .:/src
   app:
-    container_name: api
+    container_name: app
     hostname: app
+    restart: always
+    env_file:
+      - ../config/.env
     build:
       context: ..
-      dockerfile: build/Dockerfile.app-rabbitmq
+      dockerfile: build/Dockerfile.app-kafka
     ports:
       - "8080:8080"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
       postgres:
         condition: service_healthy
 volumes:

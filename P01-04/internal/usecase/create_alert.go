@@ -16,6 +16,7 @@ type CreateAlertInputDTO struct {
 }
 
 type CreateAlertOutputDTO struct {
+	ID        string    `json:"id"`
 	Latitude  float64   `json:"latitude"`
 	Longitude float64   `json:"longitude"`
 	Option    string    `json:"option"`
@@ -33,6 +34,7 @@ func (c *CreateAlertUseCase) Execute(input CreateAlertInputDTO) (*CreateAlertOut
 		return nil, err
 	}
 	return &CreateAlertOutputDTO{
+		ID:        alert.ID,
 		Latitude:  alert.Latitude,
 		Longitude: alert.Longitude,
 		Option:    alert.Option,

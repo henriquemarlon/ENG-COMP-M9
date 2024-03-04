@@ -3,19 +3,21 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
-	"net/http"
-	"github.com/go-chi/chi/v5"
+	"fmt"
+	"os"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/rabbitmq"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/repository"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
 	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/web"
+	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
+	"net/http"
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgresql://admin:password@postgres:5432/postgres?sslmode=disable")
+	db, err := sql.Open("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable", os.Getenv("DATABASE_USERNAME"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_NAME")))
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}

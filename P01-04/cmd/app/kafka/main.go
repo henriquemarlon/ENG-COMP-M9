@@ -3,27 +3,45 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/kafka"
+	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/repository"
+	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/web"
+	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/go-chi/chi/v5"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"github.com/go-chi/chi/v5"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/rabbitmq"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/repository"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/web"
-	_ "github.com/lib/pq"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"os"
 )
 
 func main() {
-	db, err := sql.Open("postgres", "postgresql://admin:password@postgres:5432/postgres?sslmode=disable")
+	db, err := sql.Open("postgres", fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable", os.Getenv("DATABASE_USERNAME"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_NAME")))
 	if err != nil {
 		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 	}
 	defer db.Close()
 
-	msgChan := make(chan *amqp.Delivery)
-	rabbitmqRepository := rabbitmq.NewRabbitMQConsumer("sensors-log-queue", "amqp://app:admin1234@rabbitmq:5672/")
-	go rabbitmqRepository.Consume(msgChan)
+	msgChan := make(chan *ckafka.Message)
+
+	configMap := &ckafka.ConfigMap{
+		"bootstrap.servers":  os.Getenv("CONFLUENT_BOOTSTRAP_SERVER_SASL"),
+		"sasl.mechanisms":    "PLAIN",
+		"security.protocol":  "SASL_SSL",
+		"sasl.username":      os.Getenv("CONFLUENT_API_KEY"),
+		"sasl.password":      os.Getenv("CONFLUENT_API_SECRET"),
+		"session.timeout.ms": 6000,
+		"group.id":           "orbit-city",
+		"auto.offset.reset":  "latest",
+	}
+
+	kafkaRepository := kafka.NewKafkaConsumer(configMap, []string{os.Getenv("CONFLUENT_KAFKA_TOPIC_NAME")})
+	go func() {
+		if err := kafkaRepository.Consume(msgChan); err != nil {
+			log.Printf("Error consuming kafka queue: %v", err)
+		}
+	}()
 
 	sensorsRepository := repository.NewSensorRepositoryPostgres(db)
 	createSensorLogUseCase := usecase.NewCreateSensorLogUseCase(sensorsRepository)
@@ -36,15 +54,15 @@ func main() {
 	alertHandlers := web.NewAlertHandlers(createAlertUseCase, findAllAlertsUseCase)
 
 	//TODO: this is the best way to do this? need to refactor or find another way to start the server
-	r := chi.NewRouter()
-	r.Get("/alerts", alertHandlers.FindAllAlertsHandler)
-	r.Post("/alerts", alertHandlers.CreateAlertHandler)
-	r.Post("/sensors", sensorHandlers.CreateSensorHandler)
-	go http.ListenAndServe(":8080", r)
+	router := chi.NewRouter()
+	router.Get("/alerts", alertHandlers.FindAllAlertsHandler)
+	router.Post("/alerts", alertHandlers.CreateAlertHandler)
+	router.Post("/sensors", sensorHandlers.CreateSensorHandler)
+	go http.ListenAndServe(":8080", router)
 
 	for msg := range msgChan {
 		dto := usecase.CreateSensorLogInputDTO{}
-		err := json.Unmarshal(msg.Body, &dto)
+		err := json.Unmarshal(msg.Value, &dto)
 		if err != nil {
 			log.Fatalf("Failed to unmarshal JSON: %v", err)
 		}

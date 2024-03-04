@@ -3,7 +3,7 @@ module github.com/Inteli-College/2024-T0002-EC09-G04
 go 1.21.6
 
 require (
-	github.com/confluentinc/confluent-kafka-go v1.9.2
+	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/uuid v1.3.0

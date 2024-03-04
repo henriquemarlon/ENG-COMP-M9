@@ -1,0 +1,80 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  postgres:
+    image: postgres
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "5432:5432"
+    volumes:
+      - ../utils/migrations.sql:/docker-entrypoint-initdb.d/migrations.sql
+      - postgres:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    build:
+      context: .
+      dockerfile: Dockerfile.rabbitmq
+    ports:
+      - "1883:1883"
+      - "1891:1891"
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 2s
+      timeout: 2s
+      retries: 20
+    restart: always
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\""
+    command: ["rabbitmq-server"]
+    volumes:
+      - ../config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ../config/definitions.json:/etc/rabbitmq/definitions.json:ro
+  simulation:
+    container_name: simulation
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.simulation-rabbitmq
+    env_file:
+      - ../config/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+  app:
+    container_name: app
+    hostname: app
+    env_file:
+      - ../config/.env
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.app-rabbitmq
+    ports:
+      - "8080:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres:

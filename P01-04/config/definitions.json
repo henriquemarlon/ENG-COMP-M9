@@ -73,7 +73,7 @@
       "vhost": "/",
       "destination": "sensors-log-queue",
       "destination_type": "queue",
-      "routing_key": "stations",
+      "routing_key": "sensors",
       "arguments": {}
     }
   ]

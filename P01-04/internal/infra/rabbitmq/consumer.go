@@ -41,6 +41,7 @@ func (r *RabbitMQConsumer) Consume(msgChan chan<- *amqp.Delivery) {
 	}
 
 	for msg := range messages {
+		log.Printf("Received message: %s", msg.Body)
 		msgChan <- &msg
 	}
 }
