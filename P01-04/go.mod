@@ -1,4 +1,4 @@
-module github.com/Inteli-College/2024-T0002-EC09-G04
+module github.com/henriquemarlon/ENG-COMP-M9/P01-04
 
 go 1.21.6
 

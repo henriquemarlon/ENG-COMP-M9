@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/domain/entity"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/mqtt"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/infra/repository"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/usecase"
+	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/domain/entity"
+	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/infra/mqtt"
+	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/infra/repository"
+	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/usecase"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
@@ -33,7 +33,7 @@ func main() {
 		wg.Add(1)
 		go func(sensor usecase.FindAllSensorsOutputDTO) {
 			defer wg.Done()
-			opts := MQTT.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%s", os.Getenv("BROKER_TLS_URL"))).SetUsername(os.Getenv("BROKER_USERNAME")).SetPassword(os.Getenv("BROKER_PASSWORD")).SetClientID(sensor.ID)
+			opts := MQTT.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%s:8883", os.Getenv("BROKER_TLS_URL"))).SetUsername(os.Getenv("BROKER_USERNAME")).SetPassword(os.Getenv("BROKER_PASSWORD")).SetClientID(sensor.ID)
 			client := MQTT.NewClient(opts)
 			if session := client.Connect(); session.Wait() && session.Error() != nil {
 				log.Fatalf("Failed to connect to MQTT broker: %v", session.Error())

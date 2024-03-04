@@ -3,7 +3,7 @@ package repository
 import (
 	"log"
 	"database/sql"
-	"github.com/Inteli-College/2024-T0002-EC09-G04/internal/domain/entity"
+	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/domain/entity"
 	_ "github.com/lib/pq"
 )
 
