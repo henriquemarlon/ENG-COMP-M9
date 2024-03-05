@@ -22,9 +22,6 @@ type Sensor struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type SubData struct {
-}
-
 func Entropy(newInterval []float64) float64 {
 	rand.NewSource(time.Now().UnixNano())
 	return math.Round(rand.Float64()*(newInterval[0]-newInterval[1]) + newInterval[1])
