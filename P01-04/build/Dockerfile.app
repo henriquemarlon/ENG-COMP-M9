@@ -8,4 +8,4 @@ RUN apt-get update && apt-get install -y librdkafka-dev
 
 RUN go mod download -x
 
-CMD ["go", "run", "./cmd/app/kafka"]
+CMD ["go", "run", "./cmd/app/"]
