@@ -96,4 +96,10 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Documents inserted. IDs: %v\n", insertResult.InsertedIDs)
+
+	err = client.Disconnect(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connection to MongoDB closed.")
 }

@@ -28,6 +28,14 @@ services:
       dockerfile: build/Dockerfile.app
     ports:
       - "8080:8080"
+  migrations:
+    container_name: migrations
+    hostname: migrations
+    env_file:
+      - ../config/.env
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.migrations
   metabase:
     image: metabase/metabase:latest
     environment:

@@ -10,7 +10,14 @@ test: broker
 run:
 	@docker compose \
 		-f ./build/compose.yaml \
-		up --build
+		--env-file ./config/.env \
+		up simulation app metabase --build
+
+.PHONY: migrations
+migrations:
+	@docker compose \
+		-f ./build/compose.yaml \
+		up migrations --build
 
 .PHONY: coverage
 coverage: test

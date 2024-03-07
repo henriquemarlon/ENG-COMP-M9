@@ -63,7 +63,7 @@ func main() {
 				token := client.Publish("sensors", 1, false, string(jsonPayload))
 				log.Printf("Published: %s, on topic: %s", string(jsonPayload), "sensors")
 				token.Wait()
-				time.Sleep(3 * time.Second)
+				time.Sleep(360 * time.Second)
 			}
 		}(sensor)
 	}
