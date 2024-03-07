@@ -2,6 +2,7 @@
 package main
 
 import (
+	"os"
 	"context"
 	"fmt"
 	"log"
@@ -10,7 +11,7 @@ import (
 )
 
 func main() {
-	options := options.Client().ApplyURI("mongodb+srv://development:Lux314159@orbit-city.qa28u1u.mongodb.net/?retryWrites=true&w=majority&appName=orbit-city")
+	options := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@%s/?retryWrites=true&w=majority&appName=orbit-city", os.Getenv("MONGODB_ATLAS_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGODB_ATLAS_CLUSTER_HOSTNAME")))
 	client, err := mongo.Connect(context.TODO(), options)
 	if err != nil {
 		log.Fatal(err)
