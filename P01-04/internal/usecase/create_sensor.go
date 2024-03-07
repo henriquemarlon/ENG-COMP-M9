@@ -9,16 +9,16 @@ type CreateSensorUseCase struct {
 }
 
 type CreateSensorInputDTO struct {
-	Name      string    `json:"name"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
+	Name      string  `json:"name"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 type CreateSensorOutputDTO struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
+	Sensor_ID string  `json:"sensor_id"`
+	Name      string  `json:"name"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 func NewCreateSensorUseCase(sensorRepository entity.SensorRepository) *CreateSensorUseCase {
@@ -32,7 +32,7 @@ func (c *CreateSensorUseCase) Execute(input CreateSensorInputDTO) (*CreateSensor
 		return nil, err
 	}
 	return &CreateSensorOutputDTO{
-		ID:        sensor.ID,
+		Sensor_ID: sensor.ID,
 		Name:      sensor.Name,
 		Latitude:  sensor.Latitude,
 		Longitude: sensor.Longitude,

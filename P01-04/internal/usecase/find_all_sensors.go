@@ -1,3 +1,4 @@
+// usecase/find_all_sensors.go
 package usecase
 
 import (
@@ -9,12 +10,11 @@ type FindAllSensorsUseCase struct {
 }
 
 type FindAllSensorsOutputDTO struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Latitude  float64   `json:"latitude"`
-	Longitude float64   `json:"longitude"`
-	MinMax    []float64 `json:"min_max"`
-	ZCrit     float64   `json:"zcritc"`
+	ID        string                  `json:"sensor_id"`
+	Name      string                  `json:"name"`
+	Latitude  float64                 `json:"latitude"`
+	Longitude float64                 `json:"longitude"`
+	Params    map[string]entity.Param `json:"params"`
 }
 
 func NewFindAllSensorsUseCase(sensorRepository entity.SensorRepository) *FindAllSensorsUseCase {
@@ -29,10 +29,11 @@ func (f *FindAllSensorsUseCase) Execute() ([]FindAllSensorsOutputDTO, error) {
 	var output []FindAllSensorsOutputDTO
 	for _, sensor := range sensors {
 		output = append(output, FindAllSensorsOutputDTO{
-			ID:       sensor.ID,
-			Name:     sensor.Name,
-			Latitude: sensor.Latitude,
+			ID:        sensor.ID,
+			Name:      sensor.Name,
+			Latitude:  sensor.Latitude,
 			Longitude: sensor.Longitude,
+			Params:    sensor.Params,
 		})
 	}
 	return output, nil

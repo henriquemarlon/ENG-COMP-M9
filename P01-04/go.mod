@@ -8,7 +8,6 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.9
-	github.com/rabbitmq/amqp091-go v1.9.0
 	go.mongodb.org/mongo-driver v1.14.0
 	gonum.org/v1/gonum v0.14.0
 )

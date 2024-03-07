@@ -13,7 +13,7 @@ type AlertRepositoryMongo struct {
 	Collection *mongo.Collection
 }
 
-func NewAlertRepositoryMongo(client *mongo.Client, dbName, collectionName string) *AlertRepositoryMongo {
+func NewAlertRepositoryMongo(client *mongo.Client, dbName string, collectionName string) *AlertRepositoryMongo {
 	collection := client.Database(dbName).Collection(collectionName)
 	return &AlertRepositoryMongo{
 		Collection: collection,
