@@ -2,8 +2,8 @@ package web
 
 import (
 	"encoding/json"
-	"net/http"
 	"github.com/henriquemarlon/ENG-COMP-M9/P01-04/internal/usecase"
+	"net/http"
 )
 
 type AlertHandlers struct {

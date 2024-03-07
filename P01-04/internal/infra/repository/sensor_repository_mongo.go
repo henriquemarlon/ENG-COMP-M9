@@ -21,10 +21,10 @@ func NewSensorRepositoryMongo(client *mongo.Client, dbName string, sensorsCollec
 	}
 }
 
-func (s *SensorRepositoryMongo) CreateSensor(sensor *entity.Sensor) error {
+func (s *SensorRepositoryMongo) CreateSensor(sensor *entity.Sensor) (*mongo.InsertOneResult, error) {
 	result, err := s.Collection.InsertOne(context.TODO(), sensor)
 	log.Printf("Inserting sensor %s into the MongoDB collection: %s", result, s.Collection.Name())
-	return err
+	return result, err
 }
 
 func (s *SensorRepositoryMongo) FindAllSensors() ([]*entity.Sensor, error) {
@@ -41,6 +41,8 @@ func (s *SensorRepositoryMongo) FindAllSensors() ([]*entity.Sensor, error) {
 		err := cur.Decode(&sensor)
 		if err == mongo.ErrNoDocuments {
 			fmt.Printf("No document was found")
+		} else if err != nil {
+			return nil, err
 		}
 
 		jsonSensorData, err := json.MarshalIndent(sensor, "", " ")
@@ -59,6 +61,5 @@ func (s *SensorRepositoryMongo) FindAllSensors() ([]*entity.Sensor, error) {
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
-
 	return sensors, nil
 }

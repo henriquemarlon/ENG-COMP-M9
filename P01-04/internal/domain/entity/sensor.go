@@ -1,15 +1,15 @@
 package entity
 
 import (
-	"github.com/google/uuid"
-	"gonum.org/v1/gonum/stat"
 	"math"
 	"math/rand"
 	"time"
+	"go.mongodb.org/mongo-driver/mongo"
+	"gonum.org/v1/gonum/stat"
 )
 
 type SensorRepository interface {
-	CreateSensor(sensor *Sensor) error
+	CreateSensor(sensor *Sensor) (*mongo.InsertOneResult, error)
 	CreateSensorLog(log *Log) error
 	FindAllSensors() ([]*Sensor, error)
 }
@@ -40,7 +40,7 @@ func Entropy(newInterval []float64) float64 {
 }
 
 func NewSensor(name string, latitude float64, longitude float64) *Sensor {
-	return &Sensor{ID: uuid.New().String(), Name: name, Latitude: latitude, Longitude: longitude}
+	return &Sensor{Name: name, Latitude: latitude, Longitude: longitude}
 }
 
 func NewSensorPayload(id string, params map[string]Param, timestamp time.Time) (*SensorPayload, error) {
