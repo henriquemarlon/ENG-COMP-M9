@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	options := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@%s/?retryWrites=true&w=majority&appName=orbit-city", os.Getenv("MONGODB_ATLAS_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGODB_ATLAS_CLUSTER_HOSTNAME")))
+	options := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%s:%s@%s/?retryWrites=true&w=majority&appName=%s", os.Getenv("MONGODB_ATLAS_USERNAME"), os.Getenv("MONGO_PASSWORD"), os.Getenv("MONGODB_ATLAS_CLUSTER_HOSTNAME"), os.Getenv("MONGODB_ATLAS_APP_NAME")))
 	client, err := mongo.Connect(context.TODO(), options)
 	if err != nil {
 		log.Fatal(err)
@@ -39,6 +39,7 @@ func main() {
 	var wg sync.WaitGroup
 	for _, sensor := range sensors {
 		wg.Add(1)
+		log.Printf("Starting sensor: %v", sensor)
 		go func(sensor usecase.FindAllSensorsOutputDTO) {
 			defer wg.Done()
 			opts := MQTT.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%s:%s", os.Getenv("BROKER_TLS_URL"), os.Getenv("BROKER_PORT"))).SetUsername(os.Getenv("BROKER_USERNAME")).SetPassword(os.Getenv("BROKER_PASSWORD")).SetClientID(sensor.ID)
@@ -56,12 +57,12 @@ func main() {
 					log.Fatalf("Failed to create payload: %v", err)
 				}
 
-				jsonPayload, err := json.Marshal(payload)
+				jsonBytesPayload, err := json.Marshal(payload)
 				if err != nil {
 					log.Println("Error converting to JSON:", err)
 				}
-				token := client.Publish("sensors", 1, false, string(jsonPayload))
-				log.Printf("Published: %s, on topic: %s", string(jsonPayload), "sensors")
+				token := client.Publish("sensors", 1, false, string(jsonBytesPayload))
+				log.Printf("Published: %s, on topic: %s", string(jsonBytesPayload), "sensors")
 				token.Wait()
 				time.Sleep(360 * time.Second)
 			}
